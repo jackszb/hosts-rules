@@ -2,6 +2,7 @@
 import os
 import json
 import requests
+from urllib.parse import urlparse
 
 OUTPUT_DIR = "json"
 RULES_FILE = "rules_list.json"
@@ -22,12 +23,19 @@ def extract_domains_from_ip_list(text):
     return sorted(domains)
 
 def filename_from_url(url):
-    """根据 URL 生成唯一文件名"""
-    name = url.split("/")[-1]
+    """根据 URL 生成唯一的文件名"""
+    path = urlparse(url).path.strip("/").split("/")
+    
+    # 获取倒数第二段和倒数第一段作为文件名
+    if len(path) >= 2:
+        name = f"{path[-2]}_{path[-1]}"
+    else:
+        name = path[-1]
+
     if name.endswith(".txt"):
-        name = name[:-4]
-    name = name.replace("-", "_").replace(".", "_")
-    return f"{name}_blocked.json"
+        name = name[:-4]  # 去掉 .txt 后缀
+    name = name.replace("-", "_").replace(".", "_")  # 替换非法字符
+    return f"{name}.json"
 
 def main():
     with open(RULES_FILE, "r", encoding="utf-8") as f:
