@@ -1,0 +1,44 @@
+name: Convert JSON to Sing-Box Binary Rules
+
+on:
+  workflow_dispatch:  # 手动触发
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ 拉取仓库
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ 设置 Sing-Box
+      - name: Install Sing-Box
+        run: |
+          curl -fsSL https://sing-box.app/install.sh | sh
+          
+      # 3️⃣ 确保 rule-set 文件夹存在
+      - name: Ensure rule-set directory exists
+        run: |
+          mkdir -p rule-set
+
+      # 4️⃣ 遍历 JSON 文件并使用 sing-box 转换为二进制文件
+      - name: Convert JSON to binary rules
+        run: |
+          for json_file in *.json; do
+            if [ -f "$json_file" ]; then
+              output_file="rule-set/$(basename "$json_file" .json).srs"
+              echo "Converting $json_file to $output_file"
+              sing-box rule-set compile --output "$output_file" "$json_file"
+            fi
+          done
+
+      # 5️⃣ 提交并推送生成的二进制文件
+      - name: Commit and push binary files
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+
+          git add rule-set/*.srs
+          git commit -m "Update Sing-Box binary rules" || echo "No changes"
+          git push
