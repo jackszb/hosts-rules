@@ -1,0 +1,38 @@
+name: Generate IP-Based Blocklist JSON Rules
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install requests
+
+      - name: Ensure json directory exists
+        run: |
+          mkdir -p json
+
+      - name: Generate JSON rules
+        run: |
+          python generate_ip_based_rules.py
+
+      - name: Commit and push JSON files
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+
+          git add json/*.json
+          git commit -m "Update IP-based blocklist JSON rules" || echo "No changes"
+          git push
