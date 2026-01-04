@@ -22,14 +22,19 @@ jobs:
         run: |
           mkdir -p rule-set
 
-      # 4️⃣ 遍历 JSON 文件并使用 sing-box 转换为二进制文件
+      # 4️⃣ 遍历 json/ 文件夹里的 JSON 文件并使用 sing-box 转换为二进制文件
       - name: Convert JSON to binary rules
         run: |
-          for json_file in *.json; do
+          for json_file in json/*.json; do
             if [ -f "$json_file" ]; then
-              output_file="rule-set/$(basename "$json_file" .json).srs"
-              echo "Converting $json_file to $output_file"
-              sing-box rule-set compile --output "$output_file" "$json_file"
+              # 判断文件内容是否为有效的规则文件
+              if jq -e '.version' "$json_file" > /dev/null 2>&1; then
+                output_file="rule-set/$(basename "$json_file" .json).srs"
+                echo "Converting $json_file to $output_file"
+                sing-box rule-set compile --output "$output_file" "$json_file"
+              else
+                echo "Skipping $json_file: Not a valid rule file"
+              fi
             fi
           done
 
